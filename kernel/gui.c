@@ -1,11 +1,11 @@
 #include "gui.h"
 #include "../drivers/vga.h"
+#define SCREEN_W 80
+#define SCREEN_H 25
 #include "../drivers/keyboard.h"
 #include "../drivers/rtc.h"
 
 #define VGA_BUF ((volatile uint16_t*)0xB8000)
-#define VGA_W 80
-#define VGA_H 25
 
 static inline uint8_t inb(uint16_t port) {
     uint8_t v;
@@ -18,8 +18,8 @@ static inline void outb(uint16_t port, uint8_t val) {
 
 /* ── VGA helpers ─────────────────────────────────────────────────────────── */
 static void vput(int x, int y, char c, uint8_t col) {
-    if(x<0||x>=VGA_W||y<0||y>=VGA_H) return;
-    VGA_BUF[y*VGA_W+x]=(uint16_t)c|((uint16_t)col<<8);
+    if(x<0||x>=SCREEN_W||y<0||y>=SCREEN_H) return;
+    VGA_BUF[y*SCREEN_W+x]=(uint16_t)c|((uint16_t)col<<8);
 }
 static void vstr(int x, int y, const char* s, uint8_t col) {
     while(*s) vput(x++,y,*s++,col);
@@ -31,7 +31,7 @@ static int vstrlen(const char* s) {
     int i=0; while(s[i]) i++; return i;
 }
 static void vstr_center(int y, const char* s, uint8_t col) {
-    int x=(VGA_W-vstrlen(s))/2;
+    int x=(SCREEN_W-vstrlen(s))/2;
     vstr(x,y,s,col);
 }
 
@@ -138,10 +138,10 @@ static void draw_btn(int i, int sel) {
 static void gui_draw(int sel) {
 
     /* Fill background */
-    for(int y=0;y<VGA_H;y++) vfill(0,y,VGA_W,' ',COL_BG);
+    for(int y=0;y<SCREEN_H;y++) vfill(0,y,SCREEN_W,' ',COL_BG);
 
     /* ── Title bar ── */
-    vfill(0,0,VGA_W,' ',COL_TITLEBAR);
+    vfill(0,0,SCREEN_W,' ',COL_TITLEBAR);
     vstr_center(0,"  MyOS v0.3  |  Graphical Interface  ",COL_TITLEBAR);
 
     /* Clock top-right */
@@ -153,25 +153,25 @@ static void gui_draw(int sel) {
     vnum2(76,0,t.second, COL_CLOCK);
 
     /* ── Subtitle bar ── */
-    vfill(0,1,VGA_W,' ',COL_BG);
+    vfill(0,1,SCREEN_W,' ',COL_BG);
     vstr_center(1,"Use [1-8] number keys  |  Arrow keys to navigate  |  Enter to select",COL_HINT);
 
     /* ── Top double border ── */
-    vfill(0,2,VGA_W,'=',COL_BORDER);
+    vfill(0,2,SCREEN_W,'=',COL_BORDER);
     vput(0,2,'+',COL_BORDER); vput(79,2,'+',COL_BORDER);
 
     /* ── Column headers ── */
-    vfill(0,3,VGA_W,' ',COL_BG);
+    vfill(0,3,SCREEN_W,' ',COL_BG);
     vstr(8,  3,"System & Information",COL_HDR);
     vstr(49, 3,"Utilities & Settings",COL_HDR);
 
     /* underline headers */
-    vfill(0,4,VGA_W,' ',COL_BG);
+    vfill(0,4,SCREEN_W,' ',COL_BG);
     vfill(8, 4,20,'-',COL_BORDER);
     vfill(49,4,20,'-',COL_BORDER);
 
     /* spacer row */
-    vfill(0,5,VGA_W,' ',COL_BG);
+    vfill(0,5,SCREEN_W,' ',COL_BG);
 
     /* ── Buttons ── */
     for(int i=0;i<BTN_COUNT;i++) draw_btn(i, i==sel);
@@ -180,21 +180,21 @@ static void gui_draw(int sel) {
     for(int y=3;y<22;y++) vput(40,y,'|',COL_BORDER);
 
     /* ── Description box ── */
-    vfill(0,21,VGA_W,'=',COL_BORDER);
+    vfill(0,21,SCREEN_W,'=',COL_BORDER);
     vput(0,21,'+',COL_BORDER); vput(79,21,'+',COL_BORDER);
 
-    vfill(0,22,VGA_W,' ',COL_DESC_BOX);
+    vfill(0,22,SCREEN_W,' ',COL_DESC_BOX);
     vstr(2, 22,"  Info: ",0x3E);
     vstr(10,22,btns[sel].desc,COL_DESC_TXT);
 
     /* ── Halt bar ── */
-    vfill(0,23,VGA_W,'=',COL_BORDER);
+    vfill(0,23,SCREEN_W,'=',COL_BORDER);
     vput(0,23,'+',COL_BORDER); vput(79,23,'+',COL_BORDER);
 
-    vfill(0,24,VGA_W,' ',COL_HALT_BG);
+    vfill(0,24,SCREEN_W,' ',COL_HALT_BG);
     vstr(2, 24,"  [9] HALT SYSTEM",  COL_HALT_BG);
-    vstr(30,24,"Press 9 to shutdown the OS",0x4F);
-    vstr(60,24,"MyOS (c) 2025",0x4C);
+    vstr(30,24,"Press 9 to shutdown SOS",0x4F);
+    vstr(60,24,"SOS v1.0  2025",0x4C);
 }
 
 /* ── GUI event loop ──────────────────────────────────────────────────────── */

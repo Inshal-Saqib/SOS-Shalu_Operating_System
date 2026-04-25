@@ -1,7 +1,10 @@
 CC      = gcc
 CFLAGS  = -m32 -ffreestanding -O2 -Wall -Wextra -fno-stack-protector
 OBJS    = boot/boot.o \
-          kernel/kernel.o kernel/memory.o kernel/history.o kernel/gui.o \
+          kernel/kernel.o kernel/memory.o kernel/history.o \
+          kernel/gui.o kernel/auth.o kernel/shutdown.o \
+          kernel/splash.o kernel/uptime.o kernel/sysinfo.o \
+          kernel/calc.o kernel/banner.o \
           drivers/vga.o drivers/keyboard.o drivers/rtc.o
 
 all: myos.iso
@@ -21,6 +24,28 @@ kernel/history.o: kernel/history.c
 kernel/gui.o: kernel/gui.c
 	$(CC) $(CFLAGS) -c kernel/gui.c -o kernel/gui.o
 
+kernel/auth.o: kernel/auth.c
+	$(CC) $(CFLAGS) -c kernel/auth.c -o kernel/auth.o
+
+kernel/shutdown.o: kernel/shutdown.c
+	$(CC) $(CFLAGS) -c kernel/shutdown.c -o kernel/shutdown.o
+
+kernel/splash.o: kernel/splash.c
+	$(CC) $(CFLAGS) -c kernel/splash.c -o kernel/splash.o
+
+kernel/uptime.o: kernel/uptime.c
+	$(CC) $(CFLAGS) -c kernel/uptime.c -o kernel/uptime.o
+
+kernel/sysinfo.o: kernel/sysinfo.c
+	$(CC) $(CFLAGS) -c kernel/sysinfo.c -o kernel/sysinfo.o
+
+kernel/calc.o: kernel/calc.c
+	$(CC) $(CFLAGS) -c kernel/calc.c -o kernel/calc.o
+
+kernel/banner.o: kernel/banner.c
+	$(CC) $(CFLAGS) -c kernel/banner.c -o kernel/banner.o
+
+
 drivers/vga.o: drivers/vga.c
 	$(CC) $(CFLAGS) -c drivers/vga.c -o drivers/vga.o
 
@@ -29,9 +54,6 @@ drivers/keyboard.o: drivers/keyboard.c
 
 drivers/rtc.o: drivers/rtc.c
 	$(CC) $(CFLAGS) -c drivers/rtc.c -o drivers/rtc.o
-
-drivers/snake.o: drivers/snake.c
-	$(CC) $(CFLAGS) -c drivers/snake.c -o
 
 myos.bin: $(OBJS)
 	ld -m elf_i386 -T linker.ld --nostdlib $(OBJS) $(shell gcc -m32 -print-libgcc-file-name) -o myos.bin

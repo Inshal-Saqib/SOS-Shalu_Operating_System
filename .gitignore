@@ -1,0 +1,19 @@
+cat > ~/myos/.gitignore << 'EOF'
+# Compiled objects
+*.o
+
+# Kernel binary
+*.bin
+
+# Bootable ISO
+*.iso
+
+# Object dumps
+*.elf
+
+# Editor temp files
+*.swp
+*.swo
+*~
+.DS_Store
+EOF
