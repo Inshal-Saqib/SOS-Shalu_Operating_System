@@ -147,7 +147,12 @@ static void do_desk(void) {
         else if (action == GUI_ABOUT)    { terminal_init(); do_about();    terminal_writeline("\nPress Enter to return..."); readline(tmp,2); }
         else if (action == GUI_HISTORY)  { terminal_init(); do_logbook();  terminal_writeline("\nPress Enter to return..."); readline(tmp,2); }
         else if (action == GUI_CLEAR)    { terminal_clear(); terminal_writeline("Press Enter to return..."); readline(tmp,2); }
-        else if (action == GUI_HALT)     { shutdown(); }
+        else if (action == GUI_HALT) {
+            int choice = shutdown_confirm_gui();
+            if(choice == POWER_SHUTDOWN) { shutdown_do(); }
+            else if(choice == POWER_RESTART) { restart(); }
+            /* else CANCEL — loop back to GUI */
+        }
     }
 }
 
@@ -161,9 +166,9 @@ static void run_command(const char* base, const char* args) {
         terminal_writeline("  System:");
         terminal_setcolor(VGA_WHITE, VGA_BLACK);
         terminal_writeline("    sos-help   Show this help");
-        terminal_writeline("    wipe       Clear the screen");
+        terminal_writeline("    Saaf       Clear the screen");
         terminal_writeline("    whoami     About SOS");
-        terminal_writeline("    shutdown   Shutdown the system");
+        terminal_writeline("    shutdown   Shutdown or restart (prompts S/R/C)");
         terminal_writeline("    say        Print text  (say Hello World)");
         terminal_setcolor(VGA_LIGHT_GREEN, VGA_BLACK);
         terminal_writeline("  Information:");
@@ -205,7 +210,7 @@ static void run_command(const char* base, const char* args) {
         else if (strcmp_fn(args,"runtime")==0) terminal_writeline("  runtime: How long SOS has been running.");
         else { terminal_write("  No help for: "); terminal_writeline(args); }
 
-    } else if (strcmp_fn(base, "wipe") == 0) {
+    } else if (strcmp_fn(base, "saaf") == 0) {
         terminal_clear();
         print_banner();
 
@@ -256,7 +261,10 @@ static void run_command(const char* base, const char* args) {
     } else if (strcmp_fn(base, "splash") == 0) {
         banner_print(args);
 
-    } else if (strcmp_fn(base, "shutdown") == 0) {
+    } else if (strcmp_fn(base, "shutdown") == 0 ||
+               strcmp_fn(base, "restart")  == 0) {
+        /* Both go through the same confirm prompt */
+        /* shutdown() internally handles S/R/C choice */
         shutdown();
 
     } else if (base[0] == 0) {
