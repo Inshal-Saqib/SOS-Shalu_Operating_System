@@ -4,7 +4,7 @@ OBJS    = boot/boot.o \
           kernel/kernel.o kernel/memory.o kernel/history.o \
           kernel/gui.o kernel/auth.o kernel/shutdown.o \
           kernel/splash.o kernel/uptime.o kernel/sysinfo.o \
-          kernel/calc.o kernel/banner.o \
+          kernel/calc.o kernel/banner.o kernel/session.o \
           drivers/vga.o drivers/keyboard.o drivers/rtc.o
 
 all: myos.iso
@@ -45,6 +45,8 @@ kernel/calc.o: kernel/calc.c
 kernel/banner.o: kernel/banner.c
 	$(CC) $(CFLAGS) -c kernel/banner.c -o kernel/banner.o
 
+kernel/session.o: kernel/session.c
+	$(CC) $(CFLAGS) -c kernel/session.c -o kernel/session.o
 
 drivers/vga.o: drivers/vga.c
 	$(CC) $(CFLAGS) -c drivers/vga.c -o drivers/vga.o
