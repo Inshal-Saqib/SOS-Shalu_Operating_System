@@ -1,20 +1,34 @@
-# Compiled objects
+# =========================
+# Object Files
+# =========================
 *.o
+*.obj
 
-# Kernel binary
+# =========================
+# Kernel / Binary Outputs
+# =========================
 *.bin
-
-# Bootable ISO
-*.iso
-
-# Object dumps
 *.elf
+*.iso
+*.img
 
-# shell files
-*.sh
+# =========================
+# Debug / Map Files
+# =========================
+*.map
+*.log
 
-# Editor temp files
+# =========================
+# Temporary / Backup Files
+# =========================
 *.swp
 *.swo
 *~
+
+# =========================
+# OS / Editor Metadata
+# =========================
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
