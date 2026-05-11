@@ -12,6 +12,7 @@
 #include "calc.h"
 #include "banner.h"
 #include "session.h"
+#include "../drivers/net.h"
 
 #define MAX_CMD  80
 #define CLIP_MAX 80
@@ -184,6 +185,13 @@ static void run_command(const char* base, const char* args) {
         terminal_setcolor(VGA_WHITE,VGA_BLACK);
         terminal_writeline("    desk       Open GUI desk mode");
         terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
+        terminal_writeline("  Network (CCN):");
+        terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        terminal_writeline("    netset     Set your IP  (netset 192.168.100.10)");
+        terminal_writeline("    send       Send message (send 192.168.100.20 Hi!)");
+        terminal_writeline("    recv       Wait for incoming message");
+        terminal_writeline("    netstat    Show network status");
+        terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
         terminal_writeline("  Keys:");
         terminal_setcolor(VGA_WHITE,VGA_BLACK);
         terminal_writeline("    PgUp/PgDn  Scroll terminal");
@@ -235,6 +243,132 @@ static void run_command(const char* base, const char* args) {
 
     } else if(strcmp_fn(base,"splash")==0) {
         banner_print(args);
+
+    } else if(strcmp_fn(base,"netstart")==0) {
+        /* netstart 1  or  netstart 2 */
+        int _vmnum = (args[0]=='2') ? 2 : 1;
+        terminal_setcolor(VGA_LIGHT_BROWN,VGA_BLACK);
+        terminal_write("  [NET] Starting as VM");
+        terminal_putchar('0'+_vmnum);
+        terminal_writeline("...");
+        terminal_setcolor(VGA_WHITE,VGA_BLACK);
+
+        if(net_start(_vmnum)) {
+            terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
+            terminal_write("  [NET] Ready!  My  IP : ");
+            net_print_ip(g_net.my_ip);
+            terminal_putchar('\n');
+            terminal_write("  [NET] Ready!  Peer IP: ");
+            net_print_ip(g_net.peer_ip);
+            terminal_putchar('\n');
+            terminal_write("  [NET] My MAC : ");
+            int _mi;
+            for(_mi=0;_mi<6;_mi++){
+                uint8_t _b=g_net.my_mac[_mi];
+                terminal_putchar("0123456789ABCDEF"[_b>>4]);
+                terminal_putchar("0123456789ABCDEF"[_b&0xF]);
+                if(_mi<5) terminal_putchar(':');
+            }
+            terminal_putchar('\n');
+            terminal_setcolor(VGA_LIGHT_CYAN,VGA_BLACK);
+            terminal_writeline("  Now use: send <message>   recv");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        } else {
+            terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
+            terminal_writeline("  [NET] NIC not found!");
+            terminal_writeline("  Check VMware Network Adapter is set to Host-Only.");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        }
+
+    } else if(strcmp_fn(base,"send")==0) {
+        /* send <message>  — sends to peer VM automatically */
+        if(!g_net.ready) {
+            terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
+            terminal_writeline("  [NET] Not started. Run: netstart 1  or  netstart 2");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        } else if(!args[0]) {
+            terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
+            terminal_writeline("  Usage: send <message>");
+            terminal_writeline("  Example: send Hello from SOS!");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        } else {
+            terminal_setcolor(VGA_LIGHT_BROWN,VGA_BLACK);
+            terminal_write("  [NET] Sending to peer (");
+            net_print_ip(g_net.peer_ip);
+            terminal_write("): ");
+            terminal_writeline(args);
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+            if(net_send(g_net.peer_ip, args)) {
+                terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
+                terminal_writeline("  [NET] Sent!");
+            } else {
+                terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
+                terminal_writeline("  [NET] Send failed.");
+                terminal_writeline("  Is other VM running with netstart?");
+            }
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        }
+
+    } else if(strcmp_fn(base,"recv")==0) {
+        /* recv — poll for incoming messages */
+        if(!g_net.ready) {
+            terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
+            terminal_writeline("  [NET] Network not ready. Use: netset <your-ip> first.");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        } else {
+            char _mbuf[256];
+            terminal_setcolor(VGA_LIGHT_BROWN,VGA_BLACK);
+            terminal_writeline("  [NET] Waiting for message...");
+            terminal_writeline("  [NET] You have 60 seconds. Switch VM and type send.");
+            terminal_setcolor(VGA_WHITE,VGA_BLACK);
+
+            /* Count down visually so user knows time remaining */
+            int _got = 0;
+            int _secs;
+            for(_secs = 60; _secs > 0 && !_got; _secs--) {
+                /* Print countdown on same line */
+                terminal_setcolor(VGA_LIGHT_CYAN, VGA_BLACK);
+                terminal_write("  Waiting: ");
+                /* Print seconds remaining */
+                if(_secs >= 10) {
+                    terminal_putchar('0' + _secs/10);
+                }
+                terminal_putchar('0' + _secs%10);
+                terminal_write(" seconds remaining...   \r");
+                terminal_setcolor(VGA_WHITE, VGA_BLACK);
+
+                /* Poll for ~1 second worth of iterations */
+                volatile int _w;
+                for(_w = 0; _w < 80000000; _w++) {
+                    if(net_poll(_mbuf, 255)) { _got = 1; break; }
+                }
+            }
+            /* Clear the countdown line */
+            terminal_write("                                    \r");
+            if(_got) {
+                terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
+                terminal_write("  [NET] Message received: ");
+                terminal_setcolor(VGA_WHITE,VGA_BLACK);
+                terminal_writeline(_mbuf);
+            } else {
+                terminal_setcolor(VGA_LIGHT_GREY,VGA_BLACK);
+                terminal_writeline("  [NET] No message received (timeout).");
+                terminal_setcolor(VGA_WHITE,VGA_BLACK);
+            }
+        }
+
+    } else if(strcmp_fn(base,"netstat")==0) {
+        terminal_setcolor(VGA_LIGHT_CYAN,VGA_BLACK);
+        terminal_writeline("  SOS Network Status:");
+        terminal_setcolor(VGA_WHITE,VGA_BLACK);
+        terminal_write("  Ready   : "); terminal_writeline(g_net.ready?"Yes":"No - run netstart 1 or netstart 2");
+        terminal_write("  My IP   : "); if(g_net.my_ip) net_print_ip(g_net.my_ip); else terminal_write("Not set"); terminal_putchar('\n');
+        terminal_write("  Peer IP : "); if(g_net.peer_ip) net_print_ip(g_net.peer_ip); else terminal_write("Not set"); terminal_putchar('\n');
+        terminal_write("  Port    : 5000 (UDP)\n");
+        terminal_write("  Network : Host-Only\n");
+        terminal_setcolor(VGA_LIGHT_GREY,VGA_BLACK);
+        terminal_writeline("  Commands: netstart 1/2   send <msg>   recv   netstat");
+        terminal_setcolor(VGA_WHITE,VGA_BLACK);
 
     } else if(strcmp_fn(base,"shutdown")==0) {
         shutdown();

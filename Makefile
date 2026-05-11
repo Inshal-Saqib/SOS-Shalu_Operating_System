@@ -5,7 +5,7 @@ OBJS    = boot/boot.o \
           kernel/gui.o kernel/auth.o kernel/shutdown.o \
           kernel/splash.o kernel/uptime.o kernel/sysinfo.o \
           kernel/calc.o kernel/banner.o kernel/session.o \
-          drivers/vga.o drivers/keyboard.o drivers/rtc.o
+          drivers/vga.o drivers/keyboard.o drivers/rtc.o drivers/net.o
 
 all: myos.iso
 
@@ -56,6 +56,9 @@ drivers/keyboard.o: drivers/keyboard.c
 
 drivers/rtc.o: drivers/rtc.c
 	$(CC) $(CFLAGS) -c drivers/rtc.c -o drivers/rtc.o
+
+drivers/net.o: drivers/net.c
+	$(CC) $(CFLAGS) -c drivers/net.c -o drivers/net.o
 
 myos.bin: $(OBJS)
 	ld -m elf_i386 -T linker.ld --nostdlib $(OBJS) $(shell gcc -m32 -print-libgcc-file-name) -o myos.bin
