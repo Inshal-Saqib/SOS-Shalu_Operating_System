@@ -1,34 +1,38 @@
-# =========================
-# Object Files
-# =========================
+# Build output
 *.o
-*.obj
-
-# =========================
-# Kernel / Binary Outputs
-# =========================
 *.bin
-*.elf
 *.iso
+*.elf
 *.img
-
-# =========================
-# Debug / Map Files
-# =========================
 *.map
+
+# Object directories
+build/
+dist/
+out/
+
+# Temporary files
+*.tmp
 *.log
-
-# =========================
-# Temporary / Backup Files
-# =========================
 *.swp
-*.swo
-*~
 
-# =========================
-# OS / Editor Metadata
-# =========================
+# OS files
 .DS_Store
 Thumbs.db
+
+# IDE files
 .vscode/
 .idea/
+
+# Virtual machines
+*.vmdk
+*.vdi
+
+# Compiled assembly/C
+*.lst
+
+# Dependency files
+*.d
+
+# One-time setup scripts
+setup.sh
