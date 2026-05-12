@@ -6,11 +6,6 @@
 *.img
 *.map
 
-# Object directories
-build/
-dist/
-out/
-
 # Temporary files
 *.tmp
 *.log
