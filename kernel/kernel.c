@@ -87,19 +87,50 @@ static void readline(char* buf, int max);
 
 static void do_about(void) {
     terminal_setcolor(VGA_LIGHT_CYAN, VGA_BLACK);
-    terminal_writeline("  SOS - Shalu Operating System v1.0");
+    terminal_writeline("+--------------------------------------------------+");
+    terminal_writeline("|        SOS - Shalu Operating System v1.0         |");
+    terminal_writeline("+--------------------------------------------------+");
+    terminal_setcolor(VGA_LIGHT_GREEN, VGA_BLACK);
+    terminal_writeline("  Build Info:");
     terminal_setcolor(VGA_WHITE, VGA_BLACK);
-    terminal_writeline("  Built from scratch in C & x86 Assembly");
-    terminal_writeline("  Architecture : x86 32-bit Protected Mode");
-    terminal_writeline("  Bootloader   : GRUB Multiboot");
-    terminal_writeline("  Features     : VGA Driver, PS/2 Keyboard,");
-    terminal_writeline("                 Heap Memory Manager,");
-    terminal_writeline("                 CMOS Real-Time Clock,");
-    terminal_writeline("                 Scrollable Terminal,");
-    terminal_writeline("                 GUI Desk Mode,");
-    terminal_writeline("                 Password Security,");
-    terminal_writeline("                 Session Save & Restore,");
-    terminal_writeline("                 Command History & Clipboard");
+    terminal_writeline("    Language     : C (GNU C99) + x86 NASM Assembly");
+    terminal_writeline("    Architecture : x86 32-bit Protected Mode");
+    terminal_writeline("    Bootloader   : GRUB Multiboot Specification");
+    terminal_writeline("    Build Tools  : GCC -m32, NASM, GNU LD, grub-mkrescue");
+    terminal_writeline("    Platform     : VMware Workstation / QEMU");
+    terminal_putchar('\n');
+    terminal_setcolor(VGA_LIGHT_GREEN, VGA_BLACK);
+    terminal_writeline("  Features:");
+    terminal_setcolor(VGA_WHITE, VGA_BLACK);
+    terminal_writeline("    [*] Animated boot splash screen");
+    terminal_writeline("    [*] Secure login with 3-attempt lockout");
+    terminal_writeline("    [*] VGA text driver with 200-line scroll buffer");
+    terminal_writeline("    [*] PS/2 keyboard polling driver");
+    terminal_writeline("    [*] Heap memory manager (kmalloc / kfree)");
+    terminal_writeline("    [*] CMOS real-time clock and calendar");
+    terminal_writeline("    [*] Interactive CLI shell with history");
+    terminal_writeline("    [*] Ctrl+C copy / Ctrl+V paste clipboard");
+    terminal_writeline("    [*] GUI desk mode with arrow-key navigation");
+    terminal_writeline("    [*] Session save and restore on logout");
+    terminal_writeline("    [*] S/R/L/C power management menu");
+    terminal_writeline("    [*] ACPI proper shutdown");
+    terminal_writeline("    [*] Letter-operator calculator");
+    terminal_writeline("    [*] ASCII art text generator");
+    terminal_writeline("    [*] UDP network messaging (E1000 NIC driver)");
+    terminal_writeline("    [*] VM-to-VM communication over Host-Only network");
+    terminal_putchar('\n');
+    terminal_setcolor(VGA_LIGHT_GREEN, VGA_BLACK);
+    terminal_writeline("  Network:");
+    terminal_setcolor(VGA_WHITE, VGA_BLACK);
+    terminal_writeline("    Protocol     : Ethernet II + ARP + IPv4 + UDP");
+    terminal_writeline("    NIC          : Intel E1000 (VMware default)");
+    terminal_writeline("    Port         : 5000 (UDP)");
+    terminal_writeline("    VM1 IP       : 192.168.100.10");
+    terminal_writeline("    VM2 IP       : 192.168.100.20");
+    terminal_putchar('\n');
+    terminal_setcolor(VGA_LIGHT_CYAN, VGA_BLACK);
+    terminal_writeline("+--------------------------------------------------+");
+    terminal_setcolor(VGA_WHITE, VGA_BLACK);
 }
 
 static void do_memstat(void) {
@@ -153,6 +184,8 @@ static void do_desk(void);
 
 static void run_command(const char* base, const char* args) {
 
+    //sos-help command with no args shows general help, with args shows specific help for that command
+
     if(strcmp_fn(base,"sos-help")==0 && args[0]==0) {
         terminal_setcolor(VGA_LIGHT_CYAN,VGA_BLACK);
         terminal_writeline("  SOS Command Reference");
@@ -187,16 +220,19 @@ static void run_command(const char* base, const char* args) {
         terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
         terminal_writeline("  Network (CCN):");
         terminal_setcolor(VGA_WHITE,VGA_BLACK);
-        terminal_writeline("    netset     Set your IP  (netset 192.168.100.10)");
+        terminal_writeline("    netstat    Show network status");
+        terminal_writeline("    netstart   Start network interface (netstart 1 or netstart 2)");
         terminal_writeline("    send       Send message (send 192.168.100.20 Hi!)");
         terminal_writeline("    recv       Wait for incoming message");
-        terminal_writeline("    netstat    Show network status");
         terminal_setcolor(VGA_LIGHT_GREEN,VGA_BLACK);
         terminal_writeline("  Keys:");
         terminal_setcolor(VGA_WHITE,VGA_BLACK);
         terminal_writeline("    PgUp/PgDn  Scroll terminal");
         terminal_writeline("    Tab        4 spaces");
         terminal_writeline("    Ctrl+C     Copy  |  Ctrl+V  Paste");
+        terminal_writeline("    Home Scrolls to top | End scrolls to bottom");                
+
+        //Argumented help
 
     } else if(strcmp_fn(base,"sos-help")==0 && args[0]!=0) {
         if     (strcmp_fn(args,"compute")==0) terminal_writeline("  compute: a=add s=sub m=mul d=div r=mod. e.g: compute 5a3");
@@ -204,6 +240,20 @@ static void run_command(const char* base, const char* args) {
         else if(strcmp_fn(args,"say")    ==0) terminal_writeline("  say: Print text. e.g: say Hello World");
         else if(strcmp_fn(args,"status") ==0) terminal_writeline("  status: Full OS dashboard.");
         else if(strcmp_fn(args,"shutdown")==0)terminal_writeline("  shutdown: Shows S=Shutdown R=Restart L=Logout C=Cancel menu.");
+        else if(strcmp_fn(args,"netstart")==0)terminal_writeline("  netstart: Start network interface.");
+        else if(strcmp_fn(args,"send")==0)terminal_writeline("  send: Send message to the assigned IP Address. e.g: send Hi!");
+        else if(strcmp_fn(args,"recv")==0)terminal_writeline("  recv: Wait for incoming message.");
+        else if(strcmp_fn(args,"netstat")==0)terminal_writeline("  netstat: Show network status.");
+        else if(strcmp_fn(args,"wipe")==0)terminal_writeline("  wipe: Clear the terminal screen.");
+        else if(strcmp_fn(args,"memcheck")==0)terminal_writeline("  memcheck: Check memory diagnostics.");
+        else if(strcmp_fn(args,"memstat")==0)terminal_writeline("  memstat: Show memory status.");
+        else if(strcmp_fn(args,"whoami")==0)terminal_writeline("  whoami: Display SOS build information and features.");
+        else if(strcmp_fn(args,"runtime")==0)terminal_writeline("  runtime: Show system uptime.");
+        else if(strcmp_fn(args,"logbook")==0)terminal_writeline("  logbook: shows Command history (upto 10 commands).");
+        else if(strcmp_fn(args,"time")==0)terminal_writeline("  time: Show current time.");
+        else if(strcmp_fn(args,"date")==0)terminal_writeline("  date: Show current calendar date.");
+        else if(strcmp_fn(args,"desk")==0)terminal_writeline("  desk: Open GUI desk mode.");
+        
         else { terminal_write("  No help for: "); terminal_writeline(args); }
 
     } else if(strcmp_fn(base,"wipe")==0) {
@@ -313,7 +363,7 @@ static void run_command(const char* base, const char* args) {
         /* recv — poll for incoming messages */
         if(!g_net.ready) {
             terminal_setcolor(VGA_LIGHT_RED,VGA_BLACK);
-            terminal_writeline("  [NET] Network not ready. Use: netset <your-ip> first.");
+            terminal_writeline("  [NET] Network not ready. Use: netstart to initiate Network first.");
             terminal_setcolor(VGA_WHITE,VGA_BLACK);
         } else {
             char _mbuf[256];

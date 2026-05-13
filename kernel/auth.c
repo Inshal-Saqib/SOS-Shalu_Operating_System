@@ -137,7 +137,7 @@ static void draw_login(int attempt, const char* msg, uint8_t msg_col) {
 
     /* Hint */
     vfill(0,18,SCREEN_W,' ',0x17);
-    vstr_center(18,"Default credentials: admin / sos123",0x18);
+    vstr_center(18,"Default credentials: admin / 123",0x18);
 
     /* Message area */
     vfill(0,19,SCREEN_W,' ',0x17);
